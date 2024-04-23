@@ -41,6 +41,7 @@ bool board[BOARD_WIDTH][BOARD_HEIGHT] = {
 };
 bool inGame = false;
 bool inGame2 = false;
+bool waitingForInput = false;
 bool rysuj = false;
 int arkanoidx = 5, arkanoidy = 0;
 int ballx = 0;
@@ -98,7 +99,76 @@ void setup() {
 
 void loop() {
     Usb.Task();
-    if (inGame2) {
+    if(waitingForInput) {
+      if (gora) {
+        tone(buzzerPin, gameSetup[0], 2000);
+        playerInput[i] = gameSetup[0];
+        i++;
+      }
+      if (lewo) {
+        tone(buzzerPin, gameSetup[1], 2000);
+        playerInput[i] = gameSetup[1];
+        i++;
+      }
+      if (dol) {
+        tone(buzzerPin, gameSetup[2], 2000);
+        playerInput[i] = gameSetup[2];
+        i++;
+      }
+      if (prawo) {
+        tone(buzzerPin, gameSetup[3], 2000);
+        playerInput[i] = gameSetup[3];
+        i++;
+      }
+      String s1 = String(currentStep);
+      lcd.setCursor(0,0);
+      lcd.print(s1);
+      String s2 = String(i);
+      lcd.setCursor(0,1);
+      lcd.print(s2);
+    }
+    else if (inGame) {
+      currentStep = 0;
+      correctInput = true;
+      displaySequence();
+    
+      // Sprawdzenie poprawności wprowadzenia użytkownika
+      while (correctInput) {
+        //losowanie
+        generateSequence(); 
+    
+        //granie aktualnej sekwencji
+        for (int i = 0; i < currentStep; i++) {
+          tone(buzzerPin, game[i], 300);
+          delay(400);
+          noTone(buzzerPin);
+          delay(200);
+        }
+
+        // Oczekiwanie na interakcję użytkownika
+        waitingForInput = true;
+        for(int i = 0; i < 10; ++i) {
+          playerInput[i] == 0;
+        }
+
+        //sprawdzanie
+        for(int i = 0; i < currentStep; ++i) {
+          if(game[i] != playerInput[i]) {
+            correctInput = false;
+            Serial.println("Przegrales");
+            playMelodyEnd();
+          }
+        }
+    
+        if (currentStep == game_length && correctInput) {
+          // Wyświetlenie informacji o przejściu do kolejnego poziomu
+          Serial.println("Wygrales");
+          playMelodyWin();
+          delay(1000);
+        }
+      }
+    }
+    else if (inGame2) {
         noTone(buzzerPin);
         if (gora && dol && lewo && prawo) {
             pkt = 0;
@@ -212,19 +282,22 @@ void loop() {
         }
     } else {
         updateAndDrawPoints();
-        if (lewo || dol) {
+        if (dol) {
             inGame2 = true;
             matrix.fillScreen(0);
             arkanoidInit(0);
             arkanoidPlansza();
             arkanoidLinia(arkanoidx, arkanoidy);
         }
-        if (prawo || gora) {
+        else if (prawo || gora) {
             inGame2 = true;
             matrix.fillScreen(0);
             arkanoidInit(1);
             arkanoidPlansza();
             arkanoidLinia(arkanoidx, arkanoidy);
+        }
+        else if(lewo) {
+          inGame = true;
         }
     }
     delay(100);
@@ -241,45 +314,6 @@ void displaySequence() {
     delay(400);
   }
   delay(2000);
-}
-
-void waitForInput() {
-  for(int i = 0; i < 10; ++i) {
-    playerInput[i] == 0;
-  }
-  int i = 0;
-        gora = false;
-        dol = false;
-        lewo = false;
-        prawo = false;
-  while(i < currentStep) {
-    if (gora) {
-      tone(buzzerPin, gameSetup[0], 2000);
-      playerInput[i] = gameSetup[0];
-      i++;
-    }
-    if (lewo) {
-      tone(buzzerPin, gameSetup[1], 2000);
-      playerInput[i] = gameSetup[1];
-      i++;
-    }
-    if (dol) {
-      tone(buzzerPin, gameSetup[2], 2000);
-      playerInput[i] = gameSetup[2];
-      i++;
-    }
-    if (prawo) {
-      tone(buzzerPin, gameSetup[3], 2000);
-      playerInput[i] = gameSetup[3];
-      i++;
-    }
-    String s1 = String(currentStep);
-    lcd.setCursor(0,0);
-    lcd.print(s1);
-    String s2 = String(i);
-    lcd.setCursor(0,1);
-    lcd.print(s2);
-  }
 }
 
 // Funkcja generująca nową sekwencję nut
