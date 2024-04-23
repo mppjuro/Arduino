@@ -41,12 +41,14 @@ bool board[BOARD_WIDTH][BOARD_HEIGHT] = {
 };
 bool inGame = false;
 bool inGame2 = false;
+bool inGame3 = false;
 bool rysuj = false;
 int arkanoidx = 5, arkanoidy = 0;
 int ballx = 0;
 int bally = 0;
 int balldx = 0;
 int balldy = 0;
+int snakex = 0,snakey = 0;
 int pkt = 0;
 const int size = 32;
 bool T[32][32];
@@ -98,6 +100,30 @@ void setup() {
 
 void loop() {
     Usb.Task();
+    if(inGame3){
+      noTone(buzzerPin);
+        if (gora && dol && lewo && prawo) {
+            pkt = 0;
+            arkanoidGameOver();
+            delay(1500);
+        }
+        else{
+          if(gora && ((snakex)) >= ){
+              //sciana koniec gry
+          }
+          if(lewo && (snakex)){
+            //sciana
+          }
+          if(prawo && (snakex)){
+            //sciana
+          }
+          if(dol && (snakex)){
+            //sciana
+          }
+          
+        }
+      
+    }
     if (inGame2) {
         noTone(buzzerPin);
         if (gora && dol && lewo && prawo) {
