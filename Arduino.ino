@@ -47,7 +47,6 @@ int ballx = 0;
 int bally = 0;
 int balldx = 0;
 int balldy = 0;
-int score = 0;
 int pkt = 0;
 const int size = 32;
 bool T[32][32];
