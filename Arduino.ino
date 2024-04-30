@@ -49,6 +49,14 @@ int bally = 0;
 int balldx = 0;
 int balldy = 0;
 int snakex = 0,snakey = 0;
+int xegg,yegg;
+const int snakeSize = 128; // Maksymalny rozmiar węża (powierzchnia ekranu)
+int snakeX[snakeSize], snakeY[snakeSize]; // Tablice przechowujące pozycje segmentów węża
+int snakeLength = 1; // Długość węża (początkowo 1)
+
+int foodX, foodY; // Pozycja jedzenia
+snakeX[0] = matrix.width() / 2; // Początkowa pozycja głowy węża
+    snakeY[0] = matrix.height() / 2;
 int pkt = 0;
 const int size = 32;
 bool T[32][32];
@@ -101,28 +109,10 @@ void setup() {
 void loop() {
     Usb.Task();
     if(inGame3){
-      noTone(buzzerPin);
-        if (gora && dol && lewo && prawo) {
-            pkt = 0;
-            arkanoidGameOver();
-            delay(1500);
-        }
-        else{
-          if(gora && ((snakex)) >= ){
-              //sciana koniec gry
-          }
-          if(lewo && (snakex)){
-            //sciana
-          }
-          if(prawo && (snakex)){
-            //sciana
-          }
-          if(dol && (snakex)){
-            //sciana
-          }
-          
-        }
-      
+    moveSnake(); // Przesunięcie węża
+    checkCollision(); // Sprawdzenie kolizji
+    draw(); // Narysowanie węża i jedzenia
+    delay(100); // Opóźnienie, aby kontrolować prędkość gry
     }
     if (inGame2) {
         noTone(buzzerPin);
@@ -239,7 +229,7 @@ void loop() {
     } else {
         updateAndDrawPoints();
         if (lewo || dol) {
-            inGame2 = true;
+            inGame3 = true;
             matrix.fillScreen(0);
             arkanoidInit(0);
             arkanoidPlansza();
@@ -602,4 +592,58 @@ void playMelodyStart() {
         delay(noteDurations[i] + 50); // Dodatkowy czas, aby uniknąć zaniku dźwięku
         noTone(buzzerPin); // Wyłącz dźwięk
     }
+}    
+void checkCollision() {
+    // Sprawdzenie kolizji z krawędziami planszy
+    if (snakeX[0] < 0 || snakeX[0] >= matrix.width() || snakeY[0] < 0 || snakeY[0] >= matrix.height()) {
+        // Kolizja z krawędzią, koniec gry
+        gameOver();
+    }
+
+    // Sprawdzenie kolizji z samym sobą
+    for (int i = 1; i < snakeLength; i++) {
+        if (snakeX[i] == snakeX[0] && snakeY[i] == snakeY[0]) {
+            // Kolizja z samym sobą, koniec gry
+            gameOver();
+        }
+    }
+
+    // Sprawdzenie kolizji z jedzeniem
+    if (snakeX[0] == foodX && snakeY[0] == foodY) {
+        // Wąż zjadł jedzenie
+        snakeLength++; // Zwiększenie długości węża
+        spawnFood(); // Umieszczenie nowego jedzenia na planszy
+    }
+}
+
+void spawnFood() {
+    // Losowanie pozycji dla jedzenia
+    foodX = random(matrix.width());
+    foodY = random(matrix.height());
+}
+
+void draw() {
+    matrix.fillScreen(0); // Wyczyszczenie ekranu
+
+    // Narysowanie jedzenia
+    matrix.drawPixel(foodX, foodY, matrix.Color333(3, 0, 0)); // Czerwone jedzenie
+
+    // Narysowanie węża
+    for (int i = 0; i < snakeLength; i++) {
+        matrix.drawPixel(snakeX[i], snakeY[i], matrix.Color333(0, 3, 0)); // Zielony wąż
+    }
+
+    matrix.swapBuffers(); // Wyświetlenie narysowanego obrazu
+}
+
+void gameOver() {
+    // Wyświetlenie komunikatu o końcu gry
+    matrix.fillScreen(0); // Wyczyszczenie ekranu
+    matrix.setCursor(1, 8); // Ustawienie kursora
+    matrix.setTextColor(matrix.Color333(3, 0, 0)); // Czerwony tekst
+    matrix.setTextSize(1); // Rozmiar tekstu
+    matrix.print("GAME OVER!"); // Komunikat
+    matrix.swapBuffers(); // Wyświetlenie komunikatu
+    while (true); // Pętla nieskończona, zatrzymuje działanie programu
+}  
 }
