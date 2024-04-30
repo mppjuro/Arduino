@@ -54,6 +54,7 @@ bool T[32][32];
 const int buzzerPin = 8;
 bool status_C = 0;
 
+int firstLoop = true;
 int game_length = 10; // Długość gry
 int game[10]; // Tablica przechowująca sekwencję nut w grze
 int currentStep; // Aktualny krok w grze
@@ -99,41 +100,17 @@ void setup() {
 
 void loop() {
     Usb.Task();
-    if(waitingForInput) {
-      if (gora) {
-        tone(buzzerPin, gameSetup[0], 2000);
-        playerInput[i] = gameSetup[0];
-        i++;
+    if (inGame) {
+      int count; // zlicza ile zostalo kliknietych dzwiekow
+      if (firstLoop) {
+        currentStep = 0;
+        correctInput = true;
+        displaySequence();
+        firstLoop = false;
       }
-      if (lewo) {
-        tone(buzzerPin, gameSetup[1], 2000);
-        playerInput[i] = gameSetup[1];
-        i++;
-      }
-      if (dol) {
-        tone(buzzerPin, gameSetup[2], 2000);
-        playerInput[i] = gameSetup[2];
-        i++;
-      }
-      if (prawo) {
-        tone(buzzerPin, gameSetup[3], 2000);
-        playerInput[i] = gameSetup[3];
-        i++;
-      }
-      String s1 = String(currentStep);
-      lcd.setCursor(0,0);
-      lcd.print(s1);
-      String s2 = String(i);
-      lcd.setCursor(0,1);
-      lcd.print(s2);
-    }
-    else if (inGame) {
-      currentStep = 0;
-      correctInput = true;
-      displaySequence();
     
       // Sprawdzenie poprawności wprowadzenia użytkownika
-      while (correctInput) {
+      if (!waitingForInput) {
         //losowanie
         generateSequence(); 
     
@@ -145,26 +122,57 @@ void loop() {
           delay(200);
         }
 
-        // Oczekiwanie na interakcję użytkownika
         waitingForInput = true;
+        count == 0;
         for(int i = 0; i < 10; ++i) {
-          playerInput[i] == 0;
+          playerInput[i] = 0;
         }
+      }
 
-        //sprawdzanie
+      // Oczekiwanie na interakcję użytkownika
+      if(waitingForInput) {
+        if (gora) {
+          tone(buzzerPin, gameSetup[0], 2000);
+          playerInput[count] = gameSetup[0];
+          count++;
+        }
+        if (lewo) {
+          tone(buzzerPin, gameSetup[1], 2000);
+          playerInput[count] = gameSetup[1];
+          count++;
+        }
+        if (dol) {
+          tone(buzzerPin, gameSetup[2], 2000);
+          playerInput[count] = gameSetup[2];
+          count++;
+        }
+        if (prawo) {
+          tone(buzzerPin, gameSetup[3], 2000);
+          playerInput[count] = gameSetup[3];
+          count++;
+        }
+        if (currentStep == playerInput.length()) {
+          waitingForInput = false;
+        }
+      }
+
+      //sprawdzanie
+      if (!waitingForInput){
         for(int i = 0; i < currentStep; ++i) {
           if(game[i] != playerInput[i]) {
             correctInput = false;
             Serial.println("Przegrales");
             playMelodyEnd();
+            firstLoop = true;
+            break;
           }
         }
     
         if (currentStep == game_length && correctInput) {
-          // Wyświetlenie informacji o przejściu do kolejnego poziomu
           Serial.println("Wygrales");
           playMelodyWin();
           delay(1000);
+          firstLoop = true;
         }
       }
     }
