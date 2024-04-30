@@ -109,7 +109,7 @@ void setup() {
 void loop() {
     Usb.Task();
     if(inGame3){
-    moveSnake(); // Przesunięcie węża
+    draw(); // Przesunięcie węża
     checkCollision(); // Sprawdzenie kolizji
     draw(); // Narysowanie węża i jedzenia
     delay(100); // Opóźnienie, aby kontrolować prędkość gry
