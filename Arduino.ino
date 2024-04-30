@@ -48,6 +48,7 @@ int bally = 0;
 int balldx = 0;
 int balldy = 0;
 int pkt = 0;
+int snakePkt = 0;
 const int size = 32;
 bool T[32][32];
 const int buzzerPin = 8;
@@ -73,19 +74,154 @@ class KbdRptParser: public KeyboardReportParser {
 
 KbdRptParser Prs;
 
+// Struktura reprezentująca węża
+struct SnakeSegment {
+    int x;
+    int y;
+};
+
+enum Direction { UP, DOWN, LEFT, RIGHT, NONE };
+Direction currentDirection = NONE;
+
+// Maksymalna liczba segmentów węża
+const int maxSnakeLength = 512;
+SnakeSegment snake[maxSnakeLength];
+int snakeLength = 4;
+int foodX = 10, foodY = 10;  // Początkowa pozycja jedzenia
+
+// Inicjalizacja gry Snake
+void initializeSnakeGame() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("   SNAKE ver. 1.0   ");
+    lcd.setCursor(0, 1);
+    lcd.print("Score:  0           ");
+    lcd.setCursor(0, 2);
+    lcd.print("                    ");
+    lcd.setCursor(0, 3);
+    lcd.print("====  SNAKE 1.0 ====");
+    snakeLength = 4;  // Początkowa długość węża
+    for(int i = 0; i < snakeLength; i++) {
+        snake[i].x = 16 - i;
+        snake[i].y = 8;
+    }
+    spawnFood();
+}
+
+// Funkcja spawnująca jedzenie w losowym miejscu
+void spawnFood() {
+    bool onSnake;
+    do {
+        onSnake = false;
+        foodX = random(1, BOARD_WIDTH-1);
+        foodY = random(1, BOARD_HEIGHT-1);
+        for (int i = 0; i < snakeLength; i++) {
+            if (snake[i].x == foodX && snake[i].y == foodY) {
+                onSnake = true;
+                break;
+            }
+        }
+    } while(onSnake);
+}
+
+// Rysowanie stanu gry Snake
+void drawSnakeGame() {
+    matrix.fillScreen(0); // Czyszczenie ekranu
+    // Rysowanie węża
+    for(int i = 0; i < snakeLength; i++) {
+        matrix.drawPixel(snake[i].x, snake[i].y, matrix.Color333(0, 3, 0));
+    }
+    // Rysowanie jedzenia
+    matrix.drawPixel(foodX, foodY, matrix.Color333(3, 0, 0));
+}
+
+// Aktualizacja stanu gry Snake
+void updateSnakeGame() {
+    // Sprawdzenie kierunku i aktualizacja pozycji głowy węża
+    if (prawo && (currentDirection != LEFT)) {
+      currentDirection = RIGHT;
+      
+    } else if (lewo && (currentDirection != RIGHT)) {
+        currentDirection = LEFT;
+    } else if (gora && (currentDirection != DOWN)) {
+        currentDirection = UP;
+    } else if (dol && (currentDirection != UP)) {
+        currentDirection = DOWN;
+    }
+    if (currentDirection == RIGHT) {
+      snake[0].y--;
+    } else if (currentDirection == LEFT) {
+      snake[0].y++;
+    } else if (currentDirection == UP) {
+      snake[0].x--;
+    } else if (currentDirection == DOWN) {
+      snake[0].x++;
+    }
+
+    // Sprawdzenie kolizji z krawędziami
+    if (snake[0].x < 0 || snake[0].x >= BOARD_WIDTH || snake[0].y < 0 || snake[0].y >= BOARD_HEIGHT) {
+        inGame = false;
+        currentDirection = NONE;
+        playMelodyEnd();
+        lcd.setCursor(0, 0);
+    lcd.print(" KIERUNEK = PLANSZA ");
+    lcd.setCursor(0, 1);
+    lcd.print(" LEWO - ARKANOID 1  ");
+    lcd.setCursor(0, 2);
+    lcd.print(" PRAWO - ARKANOID 2 ");
+    lcd.setCursor(0, 3);
+    lcd.print(" DOL - SNAKE ver. 1 ");
+    }
+
+    // Sprawdzenie kolizji z samym sobą
+    for (int i = 1; i < snakeLength; i++) {
+        if (snake[i].x == snake[0].x && snake[i].y == snake[0].y && currentDirection != NONE) {
+            inGame = false;
+            currentDirection = NONE;
+            playMelodyEnd();
+            lcd.setCursor(0, 0);
+    lcd.print(" KIERUNEK = PLANSZA ");
+    lcd.setCursor(0, 1);
+    lcd.print(" LEWO - ARKANOID 1  ");
+    lcd.setCursor(0, 2);
+    lcd.print(" PRAWO - ARKANOID 2 ");
+    lcd.setCursor(0, 3);
+    lcd.print(" DOL - SNAKE ver. 1 ");
+        }
+    }
+
+    // Sprawdzenie czy wąż zjadł jedzenie
+    if (snake[0].x == foodX && snake[0].y == foodY) {
+        if (snakeLength < maxSnakeLength) {
+            snakeLength += 2;
+            snakePkt++;
+            lcd.setCursor(0, 1);
+            lcd.print("Score:              ");
+            lcd.setCursor(6, 1);
+            lcd.print((String(snakePkt)));
+        }
+        spawnFood(); // Nowe jedzenie
+    }
+
+    // Przesunięcie segmentów węża
+    for (int i = snakeLength - 1; i > 0; i--) {
+        snake[i] = snake[i - 1];
+    }
+}
+
 void setup() {
     pinMode(buzzerPin, OUTPUT);
     Serial.begin(9600);
     lcd.init();
     lcd.backlight();
     lcd.setCursor(0, 0);
-    lcd.print(" Nacisnij przycisk: ");
+    lcd.print(" KIERUNEK = PLANSZA ");
     lcd.setCursor(0, 1);
-    lcd.print("GORA/PRAWO-PLANSZA 1");
+    lcd.print(" LEWO - ARKANOID 1  ");
     lcd.setCursor(0, 2);
-    lcd.print("LEWO/DOL - PLANSZA 2");
+    lcd.print(" PRAWO - ARKANOID 2 ");
     lcd.setCursor(0, 3);
-    lcd.print("===   ARKANOID   ===");
+    lcd.print(" DOL - SNAKE ver. 1 ");
     Serial.println("LCD STARTED");
     matrix.begin();
     if (Usb.Init() == -1) {
@@ -210,21 +346,28 @@ void loop() {
                 lcd.print((String(pkt)));
             }
         }
+    } else if (inGame) {
+      updateSnakeGame();
+      drawSnakeGame();
     } else {
         updateAndDrawPoints();
-        if (lewo || dol) {
+        if (lewo) {
             inGame2 = true;
             matrix.fillScreen(0);
             arkanoidInit(0);
             arkanoidPlansza();
             arkanoidLinia(arkanoidx, arkanoidy);
         }
-        if (prawo || gora) {
+        if (prawo) {
             inGame2 = true;
             matrix.fillScreen(0);
             arkanoidInit(1);
             arkanoidPlansza();
             arkanoidLinia(arkanoidx, arkanoidy);
+        }
+        if (dol) {
+            inGame = true;
+            initializeSnakeGame();
         }
     }
     delay(100);
@@ -315,6 +458,14 @@ void playMelodyEnd() {
         delay(noteDurations[i] + 50);
         noTone(buzzerPin);
     }
+    lcd.setCursor(0, 0);
+    lcd.print(" KIERUNEK = PLANSZA ");
+    lcd.setCursor(0, 1);
+    lcd.print(" LEWO - ARKANOID 1  ");
+    lcd.setCursor(0, 2);
+    lcd.print(" PRAWO - ARKANOID 2 ");
+    lcd.setCursor(0, 3);
+    lcd.print(" DOL - SNAKE ver. 1 ");
 }
 
 void playMelodyWin() {
