@@ -40,6 +40,7 @@ bool board[BOARD_WIDTH][BOARD_HEIGHT] = {
     0
 };
 bool inGame = false;
+bool inGame1 = false;
 bool inGame2 = false;
 bool waitingForInput;
 bool rysuj = false;
@@ -49,6 +50,7 @@ int bally = 0;
 int balldx = 0;
 int balldy = 0;
 int pkt = 0;
+int snakePkt = 0;
 const int size = 32;
 bool T[32][32];
 const int buzzerPin = 8;
@@ -75,19 +77,174 @@ class KbdRptParser: public KeyboardReportParser {
 
 KbdRptParser Prs;
 
+// Struktura reprezentująca węża
+struct SnakeSegment {
+    int x;
+    int y;
+};
+
+enum Direction { UP, DOWN, LEFT, RIGHT, NONE };
+Direction currentDirection = NONE;
+
+// Maksymalna liczba segmentów węża
+const int maxSnakeLength = 512;
+SnakeSegment snake[maxSnakeLength];
+int snakeLength = 4;
+int foodX = 10, foodY = 10;  // Początkowa pozycja jedzenia
+
+// Inicjalizacja gry Snake
+void initializeSnakeGame() {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("   SNAKE ver. 1.0   ");
+    lcd.setCursor(0, 1);
+    lcd.print("Score:  0           ");
+    lcd.setCursor(0, 2);
+    lcd.print("                    ");
+    lcd.setCursor(0, 3);
+    lcd.print("====  SNAKE 1.0 ====");
+    snakeLength = 4;  // Początkowa długość węża
+    for(int i = 0; i < snakeLength; i++) {
+        snake[i].x = 16 - i;
+        snake[i].y = 8;
+    }
+    spawnFood();
+}
+
+// Funkcja spawnująca jedzenie w losowym miejscu
+void spawnFood() {
+    bool onSnake;
+    do {
+        onSnake = false;
+        foodX = random(0, BOARD_WIDTH-1);
+        foodY = random(0, BOARD_HEIGHT-1);
+        for (int i = 0; i < snakeLength; i++) {
+            if (snake[i].x == foodX && snake[i].y == foodY) {
+                onSnake = true;
+                break;
+            }
+        }
+    } while(onSnake);
+}
+
+// Rysowanie stanu gry Snake
+void drawSnakeGame() {
+    matrix.fillScreen(0); // Czyszczenie ekranu
+    // Rysowanie węża
+    for(int i = 0; i < snakeLength; i++) {
+        matrix.drawPixel(snake[i].x, snake[i].y, matrix.Color333(0, 2, 0));
+    }
+    // Rysowanie jedzenia
+    matrix.drawPixel(foodX, foodY, matrix.Color333(2, 0, 0));
+}
+
+// Aktualizacja stanu gry Snake
+void updateSnakeGame() {
+    // Sprawdzenie kierunku i aktualizacja pozycji głowy węża
+    if (prawo && (currentDirection != LEFT)) {
+      currentDirection = RIGHT;
+      
+    } else if (lewo && (currentDirection != RIGHT)) {
+        currentDirection = LEFT;
+    } else if (gora && (currentDirection != DOWN)) {
+        currentDirection = UP;
+    } else if (dol && (currentDirection != UP)) {
+        currentDirection = DOWN;
+    }
+    if (currentDirection == RIGHT) {
+      snake[0].y--;
+    } else if (currentDirection == LEFT) {
+      snake[0].y++;
+    } else if (currentDirection == UP) {
+      snake[0].x--;
+    } else if (currentDirection == DOWN) {
+      snake[0].x++;
+    }
+
+    // Sprawdzenie kolizji z krawędziami
+    if (snake[0].x < 0 || snake[0].x >= BOARD_WIDTH || snake[0].y < 0 || snake[0].y >= BOARD_HEIGHT) {
+        snakePkt = 0;
+        inGame = false;
+        currentDirection = NONE;
+        playMelodyEnd();
+        lcd.setCursor(0, 0);
+    lcd.print("GORA - GRA W DZWIEKI");
+    lcd.setCursor(0, 1);
+    lcd.print(" LEWO - ARKANOID 1  ");
+    lcd.setCursor(0, 2);
+    lcd.print(" PRAWO - ARKANOID 2 ");
+    lcd.setCursor(0, 3);
+    lcd.print(" DOL - SNAKE ver. 1 ");
+    }
+
+    // Sprawdzenie kolizji z samym sobą
+    for (int i = 1; i < snakeLength; i++) {
+        if (snake[i].x == snake[0].x && snake[i].y == snake[0].y && currentDirection != NONE) {
+            inGame = false;
+            currentDirection = NONE;
+            playMelodyEnd();
+            lcd.setCursor(0, 0);
+    lcd.print("GORA - GRA W DZWIEKI");
+    lcd.setCursor(0, 1);
+    lcd.print(" LEWO - ARKANOID 1  ");
+    lcd.setCursor(0, 2);
+    lcd.print(" PRAWO - ARKANOID 2 ");
+    lcd.setCursor(0, 3);
+    lcd.print(" DOL - SNAKE ver. 1 ");
+    snakePkt = 0;
+        }
+    }
+
+// Sprawdzenie czy wąż zjadł jedzenie
+if (snake[0].x == foodX && snake[0].y == foodY) {
+    if ((snakeLength + 2) <= maxSnakeLength) { // Sprawdzenie, czy jest miejsce na dodanie dwóch segmentów
+        // Zapamiętaj pozycję ostatniego segmentu
+        int last_segment_x = snake[snakeLength-1].x;
+        int last_segment_y = snake[snakeLength-1].y;
+
+        // Wydłużenie węża o jeden segment
+        snakeLength++;
+        snake[snakeLength-1].x = last_segment_x;
+        snake[snakeLength-1].y = last_segment_y;
+
+        // Wydłużenie węża o drugi segment
+        if (snakeLength < maxSnakeLength) {
+            snakeLength++;
+            snake[snakeLength-1].x = last_segment_x; // Dodaj kolejny segment w tej samej pozycji
+            snake[snakeLength-1].y = last_segment_y;
+        }
+
+        // Aktualizacja wyniku
+        snakePkt++;
+        lcd.setCursor(0, 1);
+        lcd.print("Score:              ");
+        lcd.setCursor(6, 1);
+        lcd.print(String(snakePkt));
+    }
+
+    // Generowanie nowego jedzenia
+    spawnFood();
+}
+
+// Przesunięcie segmentów węża
+for (int i = snakeLength - 1; i > 0; i--) {
+    snake[i] = snake[i - 1];
+}
+}
+
 void setup() {
     pinMode(buzzerPin, OUTPUT);
     Serial.begin(9600);
     lcd.init();
     lcd.backlight();
     lcd.setCursor(0, 0);
-    lcd.print(" Nacisnij przycisk: ");
+    lcd.print("GORA - GRA W DZWIEKI");
     lcd.setCursor(0, 1);
-    lcd.print("GORA/PRAWO-PLANSZA 1");
+    lcd.print(" LEWO - ARKANOID 1  ");
     lcd.setCursor(0, 2);
-    lcd.print("LEWO/DOL - PLANSZA 2");
+    lcd.print(" PRAWO - ARKANOID 2 ");
     lcd.setCursor(0, 3);
-    lcd.print("===   ARKANOID   ===");
+    lcd.print(" DOL - SNAKE ver. 1 ");
     Serial.println("LCD STARTED");
     matrix.begin();
     if (Usb.Init() == -1) {
@@ -100,7 +257,7 @@ void setup() {
 
 void loop() {
     Usb.Task();
-    if (inGame) {
+    if (inGame1) {
       int count; // zlicza ile zostalo kliknietych dzwiekow
       if (firstLoop) {
         currentStep = 0;
@@ -152,7 +309,7 @@ void loop() {
           playerInput[count] = gameSetup[3];
           count++;
         }
-        if (currentStep == playerInput.length()) {
+        if (currentStep == 10) {
           waitingForInput = false;
         }
       }
@@ -289,29 +446,35 @@ void loop() {
                 lcd.print((String(pkt)));
             }
         }
+    } else if (inGame) {
+      updateSnakeGame();
+      drawSnakeGame();
     } else {
         updateAndDrawPoints();
-        if (dol) {
+        if (lewo) {
             inGame2 = true;
             matrix.fillScreen(0);
             arkanoidInit(0);
             arkanoidPlansza();
             arkanoidLinia(arkanoidx, arkanoidy);
         }
-        else if (prawo || gora) {
+        if (prawo) {
             inGame2 = true;
             matrix.fillScreen(0);
             arkanoidInit(1);
             arkanoidPlansza();
             arkanoidLinia(arkanoidx, arkanoidy);
         }
-        else if(lewo) {
-          inGame = true;
+        if (dol) {
+            inGame = true;
+            initializeSnakeGame();
+        }
+        if (gora) {
+            inGame1 = true;
         }
     }
     delay(100);
 }
-
 
 void displaySequence() {
   delay(2000);
@@ -332,6 +495,46 @@ void generateSequence() {
     currentStep++;
 }
 
+void waitForInput() {
+  for(int i = 0; i < 10; ++i) {
+    playerInput[i] == 0;
+  }
+  int i = 0;
+        gora = false;
+        dol = false;
+        lewo = false;
+        prawo = false;
+  while(i < currentStep) {
+    if (gora) {
+      tone(buzzerPin, gameSetup[0], 2000);
+      playerInput[i] = gameSetup[0];
+      i++;
+    }
+    if (lewo) {
+      tone(buzzerPin, gameSetup[1], 2000);
+      playerInput[i] = gameSetup[1];
+      i++;
+    }
+    if (dol) {
+      tone(buzzerPin, gameSetup[2], 2000);
+      playerInput[i] = gameSetup[2];
+      i++;
+    }
+    if (prawo) {
+      tone(buzzerPin, gameSetup[3], 2000);
+      playerInput[i] = gameSetup[3];
+      i++;
+    }
+    String s1 = String(currentStep);
+    lcd.setCursor(0,0);
+    lcd.print(s1);
+    String s2 = String(i);
+    lcd.setCursor(0,1);
+    lcd.print(s2);
+  }
+}
+
+>>>>>>> b0c3d77efb49902c79b5dd8a0ddbffbdd7970d2f
 // Funkcja odtwarzająca melodię końcową
 void playMelodyEnd() {
     int melody[] = {
@@ -358,6 +561,14 @@ void playMelodyEnd() {
         delay(noteDurations[i] + 50);
         noTone(buzzerPin);
     }
+    lcd.setCursor(0, 0);
+    lcd.print("GORA - GRA W DZWIEKI");
+    lcd.setCursor(0, 1);
+    lcd.print(" LEWO - ARKANOID 1  ");
+    lcd.setCursor(0, 2);
+    lcd.print(" PRAWO - ARKANOID 2 ");
+    lcd.setCursor(0, 3);
+    lcd.print(" DOL - SNAKE ver. 1 ");
 }
 
 void playMelodyWin() {
