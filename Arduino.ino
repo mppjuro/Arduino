@@ -238,7 +238,7 @@ void setup() {
     lcd.init();
     lcd.backlight();
     lcd.setCursor(0, 0);
-    lcd.print(" KIERUNEK = PLANSZA ");
+    lcd.print("GORA - GRA W DZWIEKI");
     lcd.setCursor(0, 1);
     lcd.print(" LEWO - ARKANOID 1  ");
     lcd.setCursor(0, 2);
