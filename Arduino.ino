@@ -41,7 +41,7 @@ bool board[BOARD_WIDTH][BOARD_HEIGHT] = {
 };
 bool inGame = false;
 bool inGame2 = false;
-bool waitingForInput = false;
+bool waitingForInput;
 bool rysuj = false;
 int arkanoidx = 5, arkanoidy = 0;
 int ballx = 0;
@@ -107,6 +107,7 @@ void loop() {
         correctInput = true;
         displaySequence();
         firstLoop = false;
+        waitingForInput = false;
       }
     
       // Sprawdzenie poprawności wprowadzenia użytkownika
