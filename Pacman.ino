@@ -88,6 +88,13 @@ struct PacmanSegment {
     int y;
 };
 
+//Połozenie Enemy Pacmana
+struct Enemy {
+    int x;
+    int y;
+};
+
+
 enum Direction { UP, DOWN, LEFT, RIGHT, NONE };
 Direction currentDirection = NONE;
 
@@ -130,6 +137,56 @@ void spawnFood() {
         }
     } while(onSnake);
 }
+void initializeEnemies() {
+     enemies[0].x = 5; enemies[0].y = 5;
+     matrix.drawPixel(enemies[i].x, enemies[i].y, matrix.Color333(3, 0, 0));
+}
+void updateEnemies() {
+    // Iterujemy przez wszystkich przeciwników
+    for(int i = 0; i < liczba_przeciwnikow; i++) {
+        // Generujemy losowy kierunek ruchu dla każdego przeciwnika
+        int losowy_kierunek = random(4); // Losujemy liczby od 0 do 3
+
+        // Aktualizujemy pozycję przeciwnika zgodnie z wylosowanym kierunkiem
+        switch(losowy_kierunek) {
+            case 0:
+                // Ruch w górę
+                if(enemies[i].y > 0) {
+                    enemies[i].y--;
+                }
+                break;
+            case 1:
+                // Ruch w dół
+                if(enemies[i].y < BOARD_HEIGHT - 1) {
+                    enemies[i].y++;
+                }
+                break;
+            case 2:
+                // Ruch w lewo
+                if(enemies[i].x > 0) {
+                    enemies[i].x--;
+                }
+                break;
+            case 3:
+                // Ruch w prawo
+                if(enemies[i].x < BOARD_WIDTH - 1) {
+                    enemies[i].x++;
+                }
+                break;
+        }
+    }
+}
+void checkEnemyCollision() {
+    // Iterujemy przez wszystkich przeciwników
+    for(int i = 0; i < liczba_przeciwnikow; i++) {
+        // Sprawdzamy, czy przeciwnik znajduje się na tej samej pozycji co Pacman
+        if(enemies[i].x == pacman[0].x && enemies[i].y == pacman[0].y) {
+            inGame = false;
+            break;
+        }
+    }
+}
+
 
 // Rysowanie stanu gry Pacman
 void drawPacmanGame() {
@@ -167,9 +224,11 @@ void updatePacmanGame() {
 
     // Sprawdzenie czy Pacman zjadł jedzenie
     if (pacman[0].x == foodX && pacman[0].y == foodY) {
-      //mozna zjesc enemy przez 10 sekund 
+      //mozna zjesc enemy przez 10 sekund dodac trzeba
         spawnFood(); // Nowe jedzenie
     }
+
+    //funkcja spawnujaca enemy ktore bedzie chodzic po planszy trzeba dodac
 void setup() {
     pinMode(buzzerPin, OUTPUT);
     Serial.begin(9600);
@@ -198,19 +257,15 @@ void loop() {
       noTone(buzzerPin);
       updatePacmanGame();
       drawPacmanGame();
+      updateEnemies();
+      checkEnemyCollision();
     }
-    else{ 
-      
+  if (lewo) {
+    Pacmanstart = true;
+    matrix.fillScreen(0);
+    arkanoidInit(0);
+    arkanoidPlansza();
+    arkanoidLinia(arkanoidx, arkanoidy);
     }
-            if (lewo) {
-            Pacmanstart = true;
-            matrix.fillScreen(0);
-            arkanoidInit(0);
-            arkanoidPlansza();
-            arkanoidLinia(arkanoidx, arkanoidy);
-        }
         delay(100);
-    }
-  }
-
-}    
+    }    
