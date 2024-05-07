@@ -293,6 +293,8 @@ void loop() {
           tone(buzzerPin, gameSetup[0], 2000);
           playerInput[count] = gameSetup[0];
           count++;
+          lcd.setCursor(0, 0);
+          lcd.print(String(count));
         }
         if (lewo) {
           tone(buzzerPin, gameSetup[1], 2000);
@@ -309,7 +311,7 @@ void loop() {
           playerInput[count] = gameSetup[3];
           count++;
         }
-        if (currentStep == 10) {
+        if (currentStep == ) {
           waitingForInput = false;
         }
       }
@@ -534,7 +536,6 @@ void waitForInput() {
   }
 }
 
->>>>>>> b0c3d77efb49902c79b5dd8a0ddbffbdd7970d2f
 // Funkcja odtwarzająca melodię końcową
 void playMelodyEnd() {
     int melody[] = {
