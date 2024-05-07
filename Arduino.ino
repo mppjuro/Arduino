@@ -113,8 +113,8 @@ void spawnFood() {
     bool onSnake;
     do {
         onSnake = false;
-        foodX = random(1, BOARD_WIDTH-1);
-        foodY = random(1, BOARD_HEIGHT-1);
+        foodX = random(0, BOARD_WIDTH-1);
+        foodY = random(0, BOARD_HEIGHT-1);
         for (int i = 0; i < snakeLength; i++) {
             if (snake[i].x == foodX && snake[i].y == foodY) {
                 onSnake = true;
@@ -129,10 +129,10 @@ void drawSnakeGame() {
     matrix.fillScreen(0); // Czyszczenie ekranu
     // Rysowanie węża
     for(int i = 0; i < snakeLength; i++) {
-        matrix.drawPixel(snake[i].x, snake[i].y, matrix.Color333(0, 3, 0));
+        matrix.drawPixel(snake[i].x, snake[i].y, matrix.Color333(0, 2, 0));
     }
     // Rysowanie jedzenia
-    matrix.drawPixel(foodX, foodY, matrix.Color333(3, 0, 0));
+    matrix.drawPixel(foodX, foodY, matrix.Color333(2, 0, 0));
 }
 
 // Aktualizacja stanu gry Snake
@@ -160,6 +160,7 @@ void updateSnakeGame() {
 
     // Sprawdzenie kolizji z krawędziami
     if (snake[0].x < 0 || snake[0].x >= BOARD_WIDTH || snake[0].y < 0 || snake[0].y >= BOARD_HEIGHT) {
+        snakePkt = 0;
         inGame = false;
         currentDirection = NONE;
         playMelodyEnd();
@@ -187,26 +188,45 @@ void updateSnakeGame() {
     lcd.print(" PRAWO - ARKANOID 2 ");
     lcd.setCursor(0, 3);
     lcd.print(" DOL - SNAKE ver. 1 ");
+    snakePkt = 0;
         }
     }
 
-    // Sprawdzenie czy wąż zjadł jedzenie
-    if (snake[0].x == foodX && snake[0].y == foodY) {
+// Sprawdzenie czy wąż zjadł jedzenie
+if (snake[0].x == foodX && snake[0].y == foodY) {
+    if ((snakeLength + 2) <= maxSnakeLength) { // Sprawdzenie, czy jest miejsce na dodanie dwóch segmentów
+        // Zapamiętaj pozycję ostatniego segmentu
+        int last_segment_x = snake[snakeLength-1].x;
+        int last_segment_y = snake[snakeLength-1].y;
+
+        // Wydłużenie węża o jeden segment
+        snakeLength++;
+        snake[snakeLength-1].x = last_segment_x;
+        snake[snakeLength-1].y = last_segment_y;
+
+        // Wydłużenie węża o drugi segment
         if (snakeLength < maxSnakeLength) {
-            snakeLength += 2;
-            snakePkt++;
-            lcd.setCursor(0, 1);
-            lcd.print("Score:              ");
-            lcd.setCursor(6, 1);
-            lcd.print((String(snakePkt)));
+            snakeLength++;
+            snake[snakeLength-1].x = last_segment_x; // Dodaj kolejny segment w tej samej pozycji
+            snake[snakeLength-1].y = last_segment_y;
         }
-        spawnFood(); // Nowe jedzenie
+
+        // Aktualizacja wyniku
+        snakePkt++;
+        lcd.setCursor(0, 1);
+        lcd.print("Score:              ");
+        lcd.setCursor(6, 1);
+        lcd.print(String(snakePkt));
     }
 
-    // Przesunięcie segmentów węża
-    for (int i = snakeLength - 1; i > 0; i--) {
-        snake[i] = snake[i - 1];
-    }
+    // Generowanie nowego jedzenia
+    spawnFood();
+}
+
+// Przesunięcie segmentów węża
+for (int i = snakeLength - 1; i > 0; i--) {
+    snake[i] = snake[i - 1];
+}
 }
 
 void setup() {
