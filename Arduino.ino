@@ -40,7 +40,9 @@ bool board[BOARD_WIDTH][BOARD_HEIGHT] = {
     0
 };
 bool inGame = false;
+bool inGame1 = false;
 bool inGame2 = false;
+bool waitingForInput;
 bool rysuj = false;
 int arkanoidx = 5, arkanoidy = 0;
 int ballx = 0;
@@ -54,6 +56,7 @@ bool T[32][32];
 const int buzzerPin = 8;
 bool status_C = 0;
 
+int firstLoop = true;
 int game_length = 10; // Długość gry
 int game[10]; // Tablica przechowująca sekwencję nut w grze
 int currentStep; // Aktualny krok w grze
@@ -165,7 +168,7 @@ void updateSnakeGame() {
         currentDirection = NONE;
         playMelodyEnd();
         lcd.setCursor(0, 0);
-    lcd.print(" KIERUNEK = PLANSZA ");
+    lcd.print("GORA - GRA W DZWIEKI");
     lcd.setCursor(0, 1);
     lcd.print(" LEWO - ARKANOID 1  ");
     lcd.setCursor(0, 2);
@@ -181,7 +184,7 @@ void updateSnakeGame() {
             currentDirection = NONE;
             playMelodyEnd();
             lcd.setCursor(0, 0);
-    lcd.print(" KIERUNEK = PLANSZA ");
+    lcd.print("GORA - GRA W DZWIEKI");
     lcd.setCursor(0, 1);
     lcd.print(" LEWO - ARKANOID 1  ");
     lcd.setCursor(0, 2);
@@ -254,7 +257,83 @@ void setup() {
 
 void loop() {
     Usb.Task();
-    if (inGame2) {
+    if (inGame1) {
+      int count; // zlicza ile zostalo kliknietych dzwiekow
+      if (firstLoop) {
+        currentStep = 0;
+        correctInput = true;
+        displaySequence();
+        firstLoop = false;
+        waitingForInput = false;
+      }
+    
+      // Sprawdzenie poprawności wprowadzenia użytkownika
+      if (!waitingForInput) {
+        //losowanie
+        generateSequence(); 
+    
+        //granie aktualnej sekwencji
+        for (int i = 0; i < currentStep; i++) {
+          tone(buzzerPin, game[i], 300);
+          delay(400);
+          noTone(buzzerPin);
+          delay(200);
+        }
+
+        waitingForInput = true;
+        count == 0;
+        for(int i = 0; i < 10; ++i) {
+          playerInput[i] = 0;
+        }
+      }
+
+      // Oczekiwanie na interakcję użytkownika
+      if(waitingForInput) {
+        if (gora) {
+          tone(buzzerPin, gameSetup[0], 2000);
+          playerInput[count] = gameSetup[0];
+          count++;
+        }
+        if (lewo) {
+          tone(buzzerPin, gameSetup[1], 2000);
+          playerInput[count] = gameSetup[1];
+          count++;
+        }
+        if (dol) {
+          tone(buzzerPin, gameSetup[2], 2000);
+          playerInput[count] = gameSetup[2];
+          count++;
+        }
+        if (prawo) {
+          tone(buzzerPin, gameSetup[3], 2000);
+          playerInput[count] = gameSetup[3];
+          count++;
+        }
+        if (currentStep == 10) { //playerInput.length()) {
+          waitingForInput = false;
+        }
+      }
+
+      //sprawdzanie
+      if (!waitingForInput){
+        for(int i = 0; i < currentStep; ++i) {
+          if(game[i] != playerInput[i]) {
+            correctInput = false;
+            Serial.println("Przegrales");
+            playMelodyEnd();
+            firstLoop = true;
+            break;
+          }
+        }
+    
+        if (currentStep == game_length && correctInput) {
+          Serial.println("Wygrales");
+          playMelodyWin();
+          delay(1000);
+          firstLoop = true;
+        }
+      }
+    } else if (inGame2) {
         noTone(buzzerPin);
         if (gora && dol && lewo && prawo) {
             pkt = 0;
@@ -389,10 +468,12 @@ void loop() {
             inGame = true;
             initializeSnakeGame();
         }
+        if (gora) {
+            inGame1 = true;
+        }
     }
     delay(100);
 }
-
 
 void displaySequence() {
   delay(2000);
@@ -404,6 +485,13 @@ void displaySequence() {
     delay(400);
   }
   delay(2000);
+}
+
+// Funkcja generująca nową sekwencję nut
+void generateSequence() {
+    int randomIndex = random(0, 4);
+    game[currentStep] = gameSetup[randomIndex];
+    currentStep++;
 }
 
 void waitForInput() {
@@ -445,13 +533,6 @@ void waitForInput() {
   }
 }
 
-// Funkcja generująca nową sekwencję nut
-void generateSequence() {
-    int randomIndex = random(0, 4);
-    game[currentStep] = gameSetup[randomIndex];
-    currentStep++;
-}
-
 // Funkcja odtwarzająca melodię końcową
 void playMelodyEnd() {
     int melody[] = {
@@ -479,7 +560,7 @@ void playMelodyEnd() {
         noTone(buzzerPin);
     }
     lcd.setCursor(0, 0);
-    lcd.print(" KIERUNEK = PLANSZA ");
+    lcd.print("GORA - GRA W DZWIEKI");
     lcd.setCursor(0, 1);
     lcd.print(" LEWO - ARKANOID 1  ");
     lcd.setCursor(0, 2);
