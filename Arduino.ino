@@ -57,6 +57,7 @@ const int buzzerPin = 8;
 bool status_C = 0;
 
 int firstLoop = true;
+int count; // zlicza ile zostalo kliknietych dzwiekow
 int game_length = 10; // Długość gry
 int game[10]; // Tablica przechowująca sekwencję nut w grze
 int currentStep; // Aktualny krok w grze
@@ -258,7 +259,6 @@ void setup() {
 void loop() {
     Usb.Task();
     if (inGame1) {
-      int count; // zlicza ile zostalo kliknietych dzwiekow
       if (firstLoop) {
         currentStep = 0;
         correctInput = true;
