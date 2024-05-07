@@ -311,7 +311,7 @@ void loop() {
           playerInput[count] = gameSetup[3];
           count++;
         }
-        if (currentStep == ) {
+        if (currentStep == count) {
           waitingForInput = false;
         }
       }
