@@ -16,9 +16,9 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 #define NOTE_A4 440
 #define NOTE_B4 466
 #define NOTE_H4 494
-#define NOTE_ONE 240
-#define NOTE_TWO 550
-#define NOTE_THREE 700
+#define NOTE_ONE 2700
+#define NOTE_TWO 523
+#define NOTE_THREE 262
 #define NOTE_FOUR 1250
 
 #define CLK 11
@@ -270,48 +270,59 @@ void loop() {
       // Sprawdzenie poprawności wprowadzenia użytkownika
       if (!waitingForInput) {
         //losowanie
+        lcd.setCursor(0, 0);
         generateSequence(); 
     
         //granie aktualnej sekwencji
         for (int i = 0; i < currentStep; i++) {
-          tone(buzzerPin, game[i], 300);
-          delay(400);
+          tone(buzzerPin, game[i], 600);
+          delay(800);
           noTone(buzzerPin);
-          delay(200);
+          delay(400);
         }
 
-        waitingForInput = true;
-        count == 0;
+        count = 0;
         for(int i = 0; i < 10; ++i) {
           playerInput[i] = 0;
         }
+        waitingForInput = true;
       }
 
       // Oczekiwanie na interakcję użytkownika
       if(waitingForInput) {
         if (gora) {
-          tone(buzzerPin, gameSetup[0], 2000);
           playerInput[count] = gameSetup[0];
+          tone(buzzerPin, gameSetup[0], 600);
+          delay(800);
+          noTone(buzzerPin);
+          delay(400);
           count++;
-          lcd.setCursor(0, 0);
-          lcd.print(String(count));
         }
         if (lewo) {
-          tone(buzzerPin, gameSetup[1], 2000);
           playerInput[count] = gameSetup[1];
+          tone(buzzerPin, gameSetup[1], 600);
+          delay(800);
+          noTone(buzzerPin);
+          delay(400);
           count++;
         }
         if (dol) {
-          tone(buzzerPin, gameSetup[2], 2000);
           playerInput[count] = gameSetup[2];
+          tone(buzzerPin, gameSetup[2], 600);
+          delay(800);
+          noTone(buzzerPin);
+          delay(400);
           count++;
         }
         if (prawo) {
-          tone(buzzerPin, gameSetup[3], 2000);
           playerInput[count] = gameSetup[3];
+          tone(buzzerPin, gameSetup[3], 600);
+          delay(800);
+          noTone(buzzerPin);
+          delay(400);
           count++;
         }
-        if (currentStep == count) {
+        if (currentStep <= count) {
           waitingForInput = false;
         }
       }
@@ -480,7 +491,7 @@ void loop() {
 
 void displaySequence() {
   delay(2000);
-  for (int i = 0; i <= 4; ++i) {
+  for (int i = 0; i < 4; ++i) {
     int note = gameSetup[i];
     tone(buzzerPin, note, 600);
     delay(800);
@@ -495,67 +506,13 @@ void generateSequence() {
     int randomIndex = random(0, 4);
     game[currentStep] = gameSetup[randomIndex];
     currentStep++;
-}
-
-void waitForInput() {
-  for(int i = 0; i < 10; ++i) {
-    playerInput[i] == 0;
-  }
-  int i = 0;
-        gora = false;
-        dol = false;
-        lewo = false;
-        prawo = false;
-  while(i < currentStep) {
-    if (gora) {
-      tone(buzzerPin, gameSetup[0], 2000);
-      playerInput[i] = gameSetup[0];
-      i++;
-    }
-    if (lewo) {
-      tone(buzzerPin, gameSetup[1], 2000);
-      playerInput[i] = gameSetup[1];
-      i++;
-    }
-    if (dol) {
-      tone(buzzerPin, gameSetup[2], 2000);
-      playerInput[i] = gameSetup[2];
-      i++;
-    }
-    if (prawo) {
-      tone(buzzerPin, gameSetup[3], 2000);
-      playerInput[i] = gameSetup[3];
-      i++;
-    }
-    String s1 = String(currentStep);
-    lcd.setCursor(0,0);
-    lcd.print(s1);
-    String s2 = String(i);
-    lcd.setCursor(0,1);
-    lcd.print(s2);
-  }
+    lcd.print(String(randomIndex));
 }
 
 // Funkcja odtwarzająca melodię końcową
 void playMelodyEnd() {
-    int melody[] = {
-        NOTE_C4,
-        NOTE_H4,
-        NOTE_A4,
-        NOTE_G4,
-        NOTE_F4,
-        NOTE_E4,
-        NOTE_B4
-    };
-    int noteDurations[] = {
-        400,
-        200,
-        200,
-        200,
-        200,
-        200,
-        500
-    };
+    int melody[] = {NOTE_C4, NOTE_H4, NOTE_A4, NOTE_G4, NOTE_F4, NOTE_E4, NOTE_B4};
+    int noteDurations[] = {400, 200, 200, 200, 200, 200, 500};
 
     for (int i = 0; i < 7; i++) {
         tone(buzzerPin, melody[i], noteDurations[i]);
@@ -573,43 +530,8 @@ void playMelodyEnd() {
 }
 
 void playMelodyWin() {
-    int melody[] = {
-        NOTE_C4,
-        NOTE_D4,
-        NOTE_E4,
-        NOTE_F4,
-        NOTE_G4,
-        NOTE_A4,
-        NOTE_B4,
-        NOTE_H4,
-        NOTE_H4,
-        NOTE_B4,
-        NOTE_A4,
-        NOTE_G4,
-        NOTE_F4,
-        NOTE_E4,
-        NOTE_D4,
-        NOTE_C4,
-    };
-
-    int noteDurations[] = {
-        100,
-        450,
-        350,
-        250,
-        150,
-        100,
-        300,
-        200,
-        400,
-        100,
-        400,
-        300,
-        200,
-        100,
-        100,
-        300,
-    };
+    int melody[] = {NOTE_C4, NOTE_D4, NOTE_E4, NOTE_F4, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_H4, NOTE_H4, NOTE_B4, NOTE_A4, NOTE_G4, NOTE_F4, NOTE_E4, NOTE_D4, NOTE_C4}; 
+    int noteDurations[] = {100, 450, 350, 250, 150, 100, 300, 200, 400, 100, 400, 300, 200, 100, 100, 300};
 
     for (int i = 0; i < sizeof(melody) / sizeof(melody[0]); i++) {
         tone(buzzerPin, melody[i], noteDurations[i]);
@@ -788,43 +710,8 @@ void KbdRptParser::OnKeyUp(uint8_t mod, uint8_t key) {
 void KbdRptParser::OnControlKeysChanged(uint8_t before, uint8_t after) {}
 
 void playMelodyStart() {
-    int melody[] = {
-        NOTE_C4,
-        NOTE_D4,
-        NOTE_E4,
-        NOTE_F4,
-        NOTE_G4,
-        NOTE_A4,
-        NOTE_B4,
-        NOTE_H4,
-        NOTE_H4,
-        NOTE_B4,
-        NOTE_A4,
-        NOTE_G4,
-        NOTE_F4,
-        NOTE_E4,
-        NOTE_D4,
-        NOTE_C4,
-    };
-
-    int noteDurations[] = {
-        100,
-        450,
-        350,
-        250,
-        150,
-        100,
-        300,
-        200,
-        400,
-        100,
-        400,
-        300,
-        200,
-        100,
-        100,
-        300,
-    };
+    int melody[] = {NOTE_C4, NOTE_D4, NOTE_E4, NOTE_F4, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_H4, NOTE_H4, NOTE_B4, NOTE_A4, NOTE_G4, NOTE_F4, NOTE_E4, NOTE_D4, NOTE_C4}; 
+    int noteDurations[] = {100, 450, 350, 250, 150, 100, 300, 200, 400, 100, 400, 300, 200, 100, 100, 300};
 
     for (int i = 0; i < sizeof(melody) / sizeof(melody[0]); i++) {
         tone(buzzerPin, melody[i], noteDurations[i]);
