@@ -524,24 +524,8 @@ void generateSequence() {
 
 // Funkcja odtwarzająca melodię końcową
 void playMelodyEnd() {
-    int melody[] = {
-        NOTE_C4,
-        NOTE_H4,
-        NOTE_A4,
-        NOTE_G4,
-        NOTE_F4,
-        NOTE_E4,
-        NOTE_B4
-    };
-    int noteDurations[] = {
-        400,
-        200,
-        200,
-        200,
-        200,
-        200,
-        500
-    };
+    int melody[] = {NOTE_C4, NOTE_H4, NOTE_A4, NOTE_G4, NOTE_F4, NOTE_E4, NOTE_B4};
+    int noteDurations[] = {400, 200, 200, 200, 200, 200, 500};
 
     for (int i = 0; i < 7; i++) {
         tone(buzzerPin, melody[i], noteDurations[i]);
@@ -559,43 +543,8 @@ void playMelodyEnd() {
 }
 
 void playMelodyWin() {
-    int melody[] = {
-        NOTE_C4,
-        NOTE_D4,
-        NOTE_E4,
-        NOTE_F4,
-        NOTE_G4,
-        NOTE_A4,
-        NOTE_B4,
-        NOTE_H4,
-        NOTE_H4,
-        NOTE_B4,
-        NOTE_A4,
-        NOTE_G4,
-        NOTE_F4,
-        NOTE_E4,
-        NOTE_D4,
-        NOTE_C4,
-    };
-
-    int noteDurations[] = {
-        100,
-        450,
-        350,
-        250,
-        150,
-        100,
-        300,
-        200,
-        400,
-        100,
-        400,
-        300,
-        200,
-        100,
-        100,
-        300,
-    };
+    int melody[] = {NOTE_C4, NOTE_D4, NOTE_E4, NOTE_F4, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_H4, NOTE_H4, NOTE_B4, NOTE_A4, NOTE_G4, NOTE_F4, NOTE_E4, NOTE_D4, NOTE_C4}; 
+    int noteDurations[] = {100, 450, 350, 250, 150, 100, 300, 200, 400, 100, 400, 300, 200, 100, 100, 300};
 
     for (int i = 0; i < sizeof(melody) / sizeof(melody[0]); i++) {
         tone(buzzerPin, melody[i], noteDurations[i]);
@@ -816,43 +765,8 @@ void KbdRptParser::OnKeyUp(uint8_t mod, uint8_t key) {
 void KbdRptParser::OnControlKeysChanged(uint8_t before, uint8_t after) {}
 
 void playMelodyStart() {
-    int melody[] = {
-        NOTE_C4,
-        NOTE_D4,
-        NOTE_E4,
-        NOTE_F4,
-        NOTE_G4,
-        NOTE_A4,
-        NOTE_B4,
-        NOTE_H4,
-        NOTE_H4,
-        NOTE_B4,
-        NOTE_A4,
-        NOTE_G4,
-        NOTE_F4,
-        NOTE_E4,
-        NOTE_D4,
-        NOTE_C4,
-    };
-
-    int noteDurations[] = {
-        100,
-        450,
-        350,
-        250,
-        150,
-        100,
-        300,
-        200,
-        400,
-        100,
-        400,
-        300,
-        200,
-        100,
-        100,
-        300,
-    };
+    int melody[] = {NOTE_C4, NOTE_D4, NOTE_E4, NOTE_F4, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_H4, NOTE_H4, NOTE_B4, NOTE_A4, NOTE_G4, NOTE_F4, NOTE_E4, NOTE_D4, NOTE_C4}; 
+    int noteDurations[] = {100, 450, 350, 250, 150, 100, 300, 200, 400, 100, 400, 300, 200, 100, 100, 300};
 
     for (int i = 0; i < sizeof(melody) / sizeof(melody[0]); i++) {
         tone(buzzerPin, melody[i], noteDurations[i]);
