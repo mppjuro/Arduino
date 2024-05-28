@@ -260,6 +260,7 @@ void loop() {
     Usb.Task();
     if (inGame1) {
       if (firstLoop) {
+        rysujDziwieki();
         currentStep = 0;
         correctInput = true;
         displaySequence();
@@ -275,10 +276,12 @@ void loop() {
     
         //granie aktualnej sekwencji
         for (int i = 0; i < currentStep; i++) {
+          rysujDzwiekiZielony(game[i], false);
           tone(buzzerPin, game[i], 600);
           delay(800);
           noTone(buzzerPin);
           delay(400);
+          rysujDzwiekiZielony(game[i], true);
         }
 
         count = 0;
@@ -291,36 +294,44 @@ void loop() {
       // Oczekiwanie na interakcję użytkownika
       if(waitingForInput) {
         if (gora) {
+          rysujDzwiekiZielony(gameSetup[0], false);
           playerInput[count] = gameSetup[0];
           tone(buzzerPin, gameSetup[0], 600);
           delay(800);
           noTone(buzzerPin);
           delay(400);
           count++;
+          rysujDzwiekiZielony(gameSetup[0], true);
         }
         if (lewo) {
+          rysujDzwiekiZielony(gameSetup[1], false);
           playerInput[count] = gameSetup[1];
           tone(buzzerPin, gameSetup[1], 600);
           delay(800);
           noTone(buzzerPin);
           delay(400);
           count++;
+          rysujDzwiekiZielony(gameSetup[1], true);
         }
         if (dol) {
+          rysujDzwiekiZielony(gameSetup[2], false);
           playerInput[count] = gameSetup[2];
           tone(buzzerPin, gameSetup[2], 600);
           delay(800);
           noTone(buzzerPin);
           delay(400);
           count++;
+          rysujDzwiekiZielony(gameSetup[2], true);
         }
         if (prawo) {
+          rysujDzwiekiZielony(gameSetup[3], false);
           playerInput[count] = gameSetup[3];
           tone(buzzerPin, gameSetup[3], 600);
           delay(800);
           noTone(buzzerPin);
           delay(400);
           count++;
+          rysujDzwiekiZielony(gameSetup[3], true);
         }
         if (currentStep <= count) {
           waitingForInput = false;
@@ -492,11 +503,13 @@ void loop() {
 void displaySequence() {
   delay(2000);
   for (int i = 0; i < 4; ++i) {
+    rysujDzwiekiZielony(gameSetup[i], false);
     int note = gameSetup[i];
     tone(buzzerPin, note, 600);
     delay(800);
     noTone(buzzerPin);
     delay(400);
+    rysujDzwiekiZielony(gameSetup[i], true);
   }
   delay(2000);
 }
@@ -653,6 +666,48 @@ void arkanoidLinia(int x, int y) {
     matrix.drawLine(31 - y - 1, 0, 31 - y - 1, 15, matrix.Color333(0, 0, 0));
     matrix.drawLine(31 - y, x, 31 - y, x + 5, matrix.Color333(2, 0, 0));
 }
+
+void rysujDziwieki() {
+  matrix.drawLine(11, 7, 14, 10, matrix.Color333(0, 0, 2));
+  matrix.drawLine(16, 1, 19, 4, matrix.Color333(0, 0, 2));
+  matrix.drawLine(16, 7, 19, 10, matrix.Color333(0, 0, 2));
+  matrix.drawLine(16, 12, 19, 15, matrix.Color333(0, 0, 2));
+}
+
+void rysujDzwiekiZielony(int numer, bool wlaczony) {
+  if(numer == 2700) {
+    if(wlaczony) {
+      matrix.drawLine(11, 7, 14, 10, matrix.Color333(0, 0, 2));
+    }
+    else {
+      matrix.drawLine(11, 7, 14, 10, matrix.Color333(0, 2, 0));
+    }
+  }
+  else if(numer == 523) {
+    if(wlaczony) {
+      matrix.drawLine(16, 1, 19, 4, matrix.Color333(0, 0, 2));
+    }
+    else {
+      matrix.drawLine(16, 1, 19, 4, matrix.Color333(0, 2, 0));
+    }
+  }
+  else if(numer == 262) {
+    if(wlaczony) {
+      matrix.drawLine(16, 7, 19, 10, matrix.Color333(0, 0, 2));
+    }
+    else {
+      matrix.drawLine(16, 7, 19, 10, matrix.Color333(0, 2, 0));
+    }
+  }
+  else if(numer == 1250) {
+    if(wlaczony) {
+      matrix.drawLine(16, 12, 19, 15, matrix.Color333(0, 0, 2));
+    }
+    else {
+      matrix.drawLine(16, 12, 19, 15, matrix.Color333(0, 2, 0));
+    }
+  }
+} 
 
 void arkanoidGameOver() {
     matrix.fillScreen(0);
