@@ -150,10 +150,6 @@ void spawnEnemies(){
   enemies[1].y = random(1, BOARD_HEIGHT - 1);
   enemies[2].x = random(1, BOARD_WIDTH - 1);
   enemies[2].y = random(1, BOARD_HEIGHT - 1);
-}
-
-void initializeEnemies() {
-  spawnEnemies();
   for (int i = 0; i < liczba_przeciwnikow; i++)
     matrix.drawPixel(enemies[i].x, enemies[i].y, matrix.Color333(3, 0, 0));
 }
@@ -170,24 +166,28 @@ void updateEnemies() {
         // Ruch w górę
         if (enemies[i].y > 0) {
           enemies[i].y--;
+          delay(1000000);
         }
         break;
       case 1:
         // Ruch w dół
         if (enemies[i].y < BOARD_HEIGHT - 1) {
           enemies[i].y++;
+          delay(1000000);
         }
         break;
       case 2:
         // Ruch w lewo
         if (enemies[i].x > 0) {
           enemies[i].x--;
+          delay(1000000);
         }
         break;
       case 3:
         // Ruch w prawo
         if (enemies[i].x < BOARD_WIDTH - 1) {
           enemies[i].x++;
+          delay(1000000);
         }
         break;
     }
@@ -277,7 +277,6 @@ void loop() {
     drawPacmanGame();
     updateEnemies();
     checkEnemyCollision();
-    initializeEnemies();
   }
   else{
     if (lewo) {
