@@ -260,18 +260,19 @@ void loop() {
     Usb.Task();
     if (inGame1) {
       if (firstLoop) {
+        for(int i = 0; i < 4; ++i) {
+          lcd.setCursor(0, i);
+          lcd.print("                    ");
+        }
         rysujDziwieki();
         currentStep = 0;
         correctInput = true;
-        displaySequence();
         firstLoop = false;
         waitingForInput = false;
       }
     
       // Sprawdzenie poprawności wprowadzenia użytkownika
       if (!waitingForInput) {
-        //losowanie
-        lcd.setCursor(0, 0);
         generateSequence(); 
     
         //granie aktualnej sekwencji
@@ -282,6 +283,7 @@ void loop() {
           noTone(buzzerPin);
           delay(400);
           rysujDzwiekiZielony(game[i], true);
+          delay(400);
         }
 
         count = 0;
@@ -335,6 +337,7 @@ void loop() {
         }
         if (currentStep <= count) {
           waitingForInput = false;
+          delay(1000);
         }
       }
 
@@ -342,8 +345,9 @@ void loop() {
       if (!waitingForInput){
         for(int i = 0; i < currentStep; ++i) {
           if(game[i] != playerInput[i]) {
+            lcd.setCursor(0, 2);
+            lcd.print("     Przegrana!");
             correctInput = false;
-            Serial.println("Przegrales");
             playMelodyEnd();
             firstLoop = true;
             break;
@@ -351,7 +355,8 @@ void loop() {
         }
     
         if (currentStep == game_length && correctInput) {
-          Serial.println("Wygrales");
+          lcd.setCursor(0, 2);
+          lcd.print("      Wygrana!");
           playMelodyWin();
           delay(1000);
           firstLoop = true;
@@ -500,26 +505,14 @@ void loop() {
     delay(100);
 }
 
-void displaySequence() {
-  delay(2000);
-  for (int i = 0; i < 4; ++i) {
-    rysujDzwiekiZielony(gameSetup[i], false);
-    int note = gameSetup[i];
-    tone(buzzerPin, note, 600);
-    delay(800);
-    noTone(buzzerPin);
-    delay(400);
-    rysujDzwiekiZielony(gameSetup[i], true);
-  }
-  delay(2000);
-}
-
 // Funkcja generująca nową sekwencję nut
 void generateSequence() {
-    int randomIndex = random(0, 4);
-    game[currentStep] = gameSetup[randomIndex];
-    currentStep++;
-    lcd.print(String(randomIndex));
+  lcd.setCursor(0, 0);
+  lcd.print("      Poziom ");
+  lcd.print(String(currentStep));
+  int randomIndex = random(0, 4);
+  game[currentStep] = gameSetup[randomIndex];
+  currentStep++;
 }
 
 // Funkcja odtwarzająca melodię końcową
@@ -617,43 +610,43 @@ void arkanoidLinia(int x, int y) {
 }
 
 void rysujDziwieki() {
-  matrix.drawLine(11, 7, 14, 10, matrix.Color333(0, 0, 2));
-  matrix.drawLine(16, 1, 19, 4, matrix.Color333(0, 0, 2));
-  matrix.drawLine(16, 7, 19, 10, matrix.Color333(0, 0, 2));
-  matrix.drawLine(16, 12, 19, 15, matrix.Color333(0, 0, 2));
+  matrix.fillRect(11, 6, 4, 4, matrix.Color333(0, 0, 2));
+  matrix.fillRect(16, 1, 4, 4, matrix.Color333(0, 0, 2));
+  matrix.fillRect(16, 6, 4, 4, matrix.Color333(0, 0, 2));
+  matrix.fillRect(16, 11, 4, 4, matrix.Color333(0, 0, 2));
 }
 
 void rysujDzwiekiZielony(int numer, bool wlaczony) {
   if(numer == 2700) {
     if(wlaczony) {
-      matrix.drawLine(11, 7, 14, 10, matrix.Color333(0, 0, 2));
+      matrix.fillRect(11, 6, 4, 4, matrix.Color333(0, 0, 2));
     }
     else {
-      matrix.drawLine(11, 7, 14, 10, matrix.Color333(0, 2, 0));
-    }
-  }
-  else if(numer == 523) {
-    if(wlaczony) {
-      matrix.drawLine(16, 1, 19, 4, matrix.Color333(0, 0, 2));
-    }
-    else {
-      matrix.drawLine(16, 1, 19, 4, matrix.Color333(0, 2, 0));
-    }
-  }
-  else if(numer == 262) {
-    if(wlaczony) {
-      matrix.drawLine(16, 7, 19, 10, matrix.Color333(0, 0, 2));
-    }
-    else {
-      matrix.drawLine(16, 7, 19, 10, matrix.Color333(0, 2, 0));
+      matrix.fillRect(11, 6, 4, 4, matrix.Color333(0, 2, 0));
     }
   }
   else if(numer == 1250) {
     if(wlaczony) {
-      matrix.drawLine(16, 12, 19, 15, matrix.Color333(0, 0, 2));
+      matrix.fillRect(16, 1, 4, 4, matrix.Color333(0, 0, 2));
     }
     else {
-      matrix.drawLine(16, 12, 19, 15, matrix.Color333(0, 2, 0));
+      matrix.fillRect(16, 1, 4, 4, matrix.Color333(0, 2, 0));
+    }
+  }
+  else if(numer == 262) {
+    if(wlaczony) {
+      matrix.fillRect(16, 6, 4, 4, matrix.Color333(0, 0, 2));
+    }
+    else {
+      matrix.fillRect(16, 6, 4, 4, matrix.Color333(0, 2, 0));
+    }
+  }
+  else if(numer == 523) {
+    if(wlaczony) {
+      matrix.fillRect(16, 11, 4, 4, matrix.Color333(0, 0, 2));
+    }
+    else {
+      matrix.fillRect(16, 11, 4, 4, matrix.Color333(0, 2, 0));
     }
   }
 } 
