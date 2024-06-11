@@ -5,7 +5,7 @@
 #include <RGBmatrixPanel.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
-
+#include<string.h>
 #define buzzerPin 8 // Dodaję definicję zmiennej buzzerPin
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
@@ -18,8 +18,8 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 RGBmatrixPanel matrix(A, B, C, CLK, LAT, OE, false);
 
 USB Usb;
-USBHub Hub( & Usb);
-HIDBoot < USB_HID_PROTOCOL_KEYBOARD > HidKeyboard( & Usb);
+USBHub Hub(&Usb);
+HIDBoot<USB_HID_PROTOCOL_KEYBOARD> HidKeyboard(&Usb);
 
 volatile bool gora = false, dol = false, lewo = false, prawo = false;
 const int BOARD_WIDTH = 32,
@@ -100,12 +100,13 @@ struct Enemy {
 
 enum Direction { UP, DOWN, LEFT, RIGHT, NONE };
 Direction currentDirection = NONE;
-
+int Pacman_pkt = 0;
 int foodX = 10, foodY = 10;  // Początkowa pozycja jedzenia
 int liczba_przeciwnikow = 3;
 // zmienne dla pacmana
 PacmanSegment pacman[1]; //inicjalizacja połozenia pacmana
-Enemy enemies[3]; // inicjalizacja połozenia  3 przeciwników
+const int max_enemies = 10; // maksymalna liczba przeciwników
+Enemy enemies[max_enemies]; // inicjalizacja połozenia przeciwników
 
 // Inicjalizacja gry Pacman
 
@@ -124,6 +125,7 @@ void initializePacmanGame() {
     pacman[i].x = 16 - i;
     pacman[i].y = 8;
   }
+  liczba_przeciwnikow = 3; // Początkowa liczba przeciwników
   spawnFood();
   spawnEnemies();
 }
@@ -142,16 +144,12 @@ void spawnFood() {
     }
   } while (onPacman);
 }
-
-void spawnEnemies(){
-  enemies[0].x = random(1, BOARD_WIDTH - 1);
-  enemies[0].y = random(1, BOARD_HEIGHT - 1);
-  enemies[1].x = random(1, BOARD_WIDTH - 1);
-  enemies[1].y = random(1, BOARD_HEIGHT - 1);
-  enemies[2].x = random(1, BOARD_WIDTH - 1);
-  enemies[2].y = random(1, BOARD_HEIGHT - 1);
-  for (int i = 0; i < liczba_przeciwnikow; i++)
+void spawnEnemies() {
+  for (int i = 0; i < liczba_przeciwnikow; i++) {
+    enemies[i].x = random(1, BOARD_WIDTH - 1);
+    enemies[i].y = random(1, BOARD_HEIGHT - 1);
     matrix.drawPixel(enemies[i].x, enemies[i].y, matrix.Color333(3, 0, 0));
+  }
 }
 
 void updateEnemies() {
@@ -188,17 +186,17 @@ void updateEnemies() {
         break;
     }
   }
-    for (int i = 0; i < liczba_przeciwnikow; i++)
-      matrix.drawPixel(enemies[i].x, enemies[i].y, matrix.Color333(3, 0, 0));
+  for (int i = 0; i < liczba_przeciwnikow; i++)
+    matrix.drawPixel(enemies[i].x, enemies[i].y, matrix.Color333(3, 0, 0));
 }
 
 void checkEnemyCollision() {
-
   // Iterujemy przez wszystkich przeciwników
   for (int i = 0; i < liczba_przeciwnikow; i++) {
     // Sprawdzamy, czy przeciwnik znajduje się na tej samej pozycji co Pacman
     if (enemies[i].x == pacman[0].x && enemies[i].y == pacman[0].y) {
       Pacmanstart = false;
+      Pacman_pkt = 0;
       break;
     }
   }
@@ -235,11 +233,32 @@ void updatePacmanGame() {
   } else if (currentDirection == DOWN) {
     pacman[0].x++;
   }
-
+  // Sprawdzenie kolizji z krawędziami
+  if (pacman[0].x < 0) {
+    pacman[0].x = 0;
+  }
+  if(pacman[0].x >= BOARD_WIDTH)
+    pacman[0].x = BOARD_WIDTH -1;
+  if(pacman[0].y < 0)
+    pacman[0].y = 0;
+  if(pacman[0].y >= BOARD_HEIGHT)
+    pacman[0].y = BOARD_HEIGHT -1;
+    
   // Sprawdzenie czy Pacman zjadł jedzenie
   if (pacman[0].x == foodX && pacman[0].y == foodY) {
-    //mozna zjesc enemy przez 10 sekund dodac trzeba
+    // Aktualizacja wyniku
+        Pacman_pkt++;
+        lcd.setCursor(0, 1);
+        lcd.print("Score:              ");
+        lcd.setCursor(6, 1);
+        lcd.print(String(Pacman_pkt));
+    // Spawnowanie nowego jedzenia i nowego przeciwnika
     spawnFood(); // Nowe jedzenie
+    if (liczba_przeciwnikow < max_enemies) {
+      liczba_przeciwnikow++;
+      enemies[liczba_przeciwnikow - 1].x = random(1, BOARD_WIDTH - 1);
+      enemies[liczba_przeciwnikow - 1].y = random(1, BOARD_HEIGHT - 1);
+    }
   }
 }
 
@@ -268,17 +287,17 @@ void setup() {
 void loop() {
   Usb.Task();
   if (Pacmanstart) {
+
     noTone(buzzerPin);
     updatePacmanGame();
     drawPacmanGame();
     updateEnemies();
     checkEnemyCollision();
-  }
-  else{
+  } else {
     if (lewo) {
-    Pacmanstart = true;
-    matrix.fillScreen(0);
-    initializePacmanGame();
+      Pacmanstart = true;
+      matrix.fillScreen(0);
+      initializePacmanGame();
     }
   }
   delay(100);
