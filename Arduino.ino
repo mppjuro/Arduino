@@ -58,6 +58,7 @@ bool status_C = 0;
 
 int firstLoop = true;
 int count; // zlicza ile zostalo kliknietych dzwiekow
+int checkStep;
 int game_length = 10; // Długość gry
 int game[10]; // Tablica przechowująca sekwencję nut w grze
 int currentStep; // Aktualny krok w grze
@@ -258,17 +259,37 @@ void setup() {
 
 void loop() {
     Usb.Task();
+    if(lewo && prawo && gora && dol) {
+      delay(2000);
+      inGame1 = false;
+      inGame2 = false;
+      inGame = false;
+      lewo = false;
+      prawo = false;
+      gora = false;
+      dol = false;
+      lcd.setCursor(0, 0);
+      lcd.print("GORA - GRA W DZWIEKI");
+      lcd.setCursor(0, 1);
+      lcd.print(" LEWO - ARKANOID 1  ");
+      lcd.setCursor(0, 2);
+      lcd.print(" PRAWO - ARKANOID 2 ");
+      lcd.setCursor(0, 3);
+      lcd.print(" DOL - SNAKE ver. 1 ");
+    }
     if (inGame1) {
       if (firstLoop) {
+        matrix.fillScreen(0);
         for(int i = 0; i < 4; ++i) {
           lcd.setCursor(0, i);
           lcd.print("                    ");
         }
         rysujDziwieki();
-        currentStep = 0;
         correctInput = true;
         firstLoop = false;
         waitingForInput = false;
+        currentStep = 0;
+        count = 0;
       }
     
       // Sprawdzenie poprawności wprowadzenia użytkownika
@@ -277,63 +298,37 @@ void loop() {
     
         //granie aktualnej sekwencji
         for (int i = 0; i < currentStep; i++) {
-          rysujDzwiekiZielony(game[i], false);
+          rysujDzwiekiZielony(game[i], 0, 2, 0);
           tone(buzzerPin, game[i], 600);
           delay(800);
           noTone(buzzerPin);
           delay(400);
-          rysujDzwiekiZielony(game[i], true);
+          rysujDzwiekiZielony(game[i], 0, 0, 2);
           delay(400);
         }
 
         count = 0;
+        checkStep = 0;
         for(int i = 0; i < 10; ++i) {
           playerInput[i] = 0;
         }
         waitingForInput = true;
+
       }
 
       // Oczekiwanie na interakcję użytkownika
       if(waitingForInput) {
         if (gora) {
-          rysujDzwiekiZielony(gameSetup[0], false);
-          playerInput[count] = gameSetup[0];
-          tone(buzzerPin, gameSetup[0], 600);
-          delay(800);
-          noTone(buzzerPin);
-          delay(400);
-          count++;
-          rysujDzwiekiZielony(gameSetup[0], true);
+          checkOneStep(0);
         }
         if (lewo) {
-          rysujDzwiekiZielony(gameSetup[1], false);
-          playerInput[count] = gameSetup[1];
-          tone(buzzerPin, gameSetup[1], 600);
-          delay(800);
-          noTone(buzzerPin);
-          delay(400);
-          count++;
-          rysujDzwiekiZielony(gameSetup[1], true);
+          checkOneStep(1);
         }
         if (dol) {
-          rysujDzwiekiZielony(gameSetup[2], false);
-          playerInput[count] = gameSetup[2];
-          tone(buzzerPin, gameSetup[2], 600);
-          delay(800);
-          noTone(buzzerPin);
-          delay(400);
-          count++;
-          rysujDzwiekiZielony(gameSetup[2], true);
+          checkOneStep(2);
         }
         if (prawo) {
-          rysujDzwiekiZielony(gameSetup[3], false);
-          playerInput[count] = gameSetup[3];
-          tone(buzzerPin, gameSetup[3], 600);
-          delay(800);
-          noTone(buzzerPin);
-          delay(400);
-          count++;
-          rysujDzwiekiZielony(gameSetup[3], true);
+          checkOneStep(3);
         }
         if (currentStep <= count) {
           waitingForInput = false;
@@ -342,25 +337,12 @@ void loop() {
       }
 
       //sprawdzanie
-      if (!waitingForInput){
-        for(int i = 0; i < currentStep; ++i) {
-          if(game[i] != playerInput[i]) {
-            lcd.setCursor(0, 2);
-            lcd.print("     Przegrana!");
-            correctInput = false;
-            playMelodyEnd();
-            firstLoop = true;
-            break;
-          }
-        }
-    
-        if (currentStep == game_length && correctInput) {
-          lcd.setCursor(0, 2);
-          lcd.print("      Wygrana!");
-          playMelodyWin();
-          delay(1000);
-          firstLoop = true;
-        }
+      if (!waitingForInput && currentStep == game_length && correctInput){
+        lcd.setCursor(0, 2);
+        lcd.print("      Wygrana!");
+        playMelodyWin();
+        delay(1000);
+        firstLoop = true;
       }
     }
     else if (inGame2) {
@@ -616,38 +598,38 @@ void rysujDziwieki() {
   matrix.fillRect(16, 11, 4, 4, matrix.Color333(0, 0, 2));
 }
 
-void rysujDzwiekiZielony(int numer, bool wlaczony) {
+void checkOneStep(int i) {
+  rysujDzwiekiZielony(gameSetup[i], 0, 2, 0);
+  playerInput[count] = gameSetup[i];
+  tone(buzzerPin, gameSetup[i], 600);
+  delay(800);
+  noTone(buzzerPin);
+  delay(400);
+  count++;
+  if(game[checkStep] != playerInput[checkStep]) {
+    lcd.setCursor(0, 2);
+    lcd.print("     Przegrana!");
+    correctInput = false;
+    rysujDzwiekiZielony(gameSetup[i], 2, 0, 0);
+    playMelodyEnd();
+    firstLoop = true;
+  }
+  rysujDzwiekiZielony(gameSetup[i], 0, 0, 2);
+  checkStep++;
+}
+
+void rysujDzwiekiZielony(int numer, int r, int g, int b) {
   if(numer == 2700) {
-    if(wlaczony) {
-      matrix.fillRect(11, 6, 4, 4, matrix.Color333(0, 0, 2));
-    }
-    else {
-      matrix.fillRect(11, 6, 4, 4, matrix.Color333(0, 2, 0));
-    }
+    matrix.fillRect(11, 6, 4, 4, matrix.Color333(r, g, b));
   }
   else if(numer == 1250) {
-    if(wlaczony) {
-      matrix.fillRect(16, 1, 4, 4, matrix.Color333(0, 0, 2));
-    }
-    else {
-      matrix.fillRect(16, 1, 4, 4, matrix.Color333(0, 2, 0));
-    }
+    matrix.fillRect(16, 1, 4, 4, matrix.Color333(r, g, b));
   }
   else if(numer == 262) {
-    if(wlaczony) {
-      matrix.fillRect(16, 6, 4, 4, matrix.Color333(0, 0, 2));
-    }
-    else {
-      matrix.fillRect(16, 6, 4, 4, matrix.Color333(0, 2, 0));
-    }
+    matrix.fillRect(16, 6, 4, 4, matrix.Color333(r, g, b));
   }
   else if(numer == 523) {
-    if(wlaczony) {
-      matrix.fillRect(16, 11, 4, 4, matrix.Color333(0, 0, 2));
-    }
-    else {
-      matrix.fillRect(16, 11, 4, 4, matrix.Color333(0, 2, 0));
-    }
+    matrix.fillRect(16, 11, 4, 4, matrix.Color333(r, g, b));
   }
 } 
 
